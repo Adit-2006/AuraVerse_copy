@@ -1,4 +1,4 @@
-# main_with_metacomments.py
+
 import os, sys, json, glob
 from typing import List, Dict, Any
 
@@ -53,14 +53,57 @@ def process_media(paths: List[str], out_base: str = "media_store") -> None:
 
 def process_json(paths: List[str], db_path: str = "store.db", nosql_dir: str = "nosql_store", metadata: Dict[str, Any] = None) -> None:
     """
-    Ensures each JSON object has a `metacomments` field if metadata is provided.
+    Ensures each JSON object has a `metacomments` field if metadata is provided,
+    and writes an augmented copy of each input file as <name>.with_meta.json.
     """
+    per_file: List[Tuple[str, List[Dict[str, Any]]]] = []
     all_objs: List[Dict[str, Any]] = []
+
     for p in paths:
-        all_objs.extend(load_json_objects(p))
+        objs = load_json_objects(p)
+        if metadata:
+            # accept "metacomments", or fallbacks
+            meta_comment = metadata.get("metacomments") or metadata.get("comment") or metadata.get("comments") if isinstance(metadata, dict) else str(metadata)
+            for obj in objs:
+                if meta_comment is not None and "metacomments" not in obj:
+                    obj["metacomments"] = meta_comment
+                obj["_meta"] = metadata
+        per_file.append((p, objs))
+        all_objs.extend(objs)
+
     if not all_objs:
         print("[JSON] No JSON objects found.")
         return
+
+    # NEW: write augmented copies next to sources
+    for src, objs in per_file:
+        base, ext = os.path.splitext(src)
+        out_path = f"{base}.with_meta.json"
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                json.dump(objs, f, ensure_ascii=False, indent=2)
+            print(f"[JSON][WRITE] {out_path} (objects={len(objs)})")
+        except Exception as e:
+            print(f"[JSON][WRITE][ERR] {src}: {e}")
+
+    # Existing clustering + storage paths
+    labels, clusters_info = categorize_and_model(all_objs)
+
+    for cname, details in clusters_info.items():
+        idxs = details["indices"]
+        storage = details["storage"]
+        entities = details["proposed_entities"]
+        entity = entities[0] if entities else "Entity"
+        schema = details["schema"]
+        batch = [all_objs[i] for i in idxs]
+
+        if storage == "SQL":
+            save_json_sqlite(entity_name=entity, schema=schema, objects=batch, db_path=db_path)
+            print(f"[JSON][SQL] cluster={cname} -> table={entity} rows={len(batch)} db={db_path}")
+        else:
+            path = save_json_nosql(entity_name=entity, objects=batch, base_dir=nosql_dir)
+            print(f"[JSON][NoSQL] cluster={cname} -> collection={os.path.basename(path)} docs={len(batch)} dir={nosql_dir}")
+
 
     if metadata:
         if isinstance(metadata, dict):

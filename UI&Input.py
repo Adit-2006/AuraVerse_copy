@@ -1,4 +1,4 @@
-# UI&Input_with_metacomments.py
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 import json, tempfile, os
