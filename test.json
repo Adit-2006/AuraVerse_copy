@@ -1,0 +1,40 @@
+[
+  {
+    "name": "Aarav",
+    "email": "aarav@example.com",
+    "age": 20
+  },
+  {
+    "name": "Sara",
+    "email": "sara@example.com",
+    "age": 19
+  },
+  {
+    "product_name": "Laptop",
+    "price": 55000,
+    "stock": 12,
+    "tags": ["electronics", "office"],
+    "seller": {
+      "name": "TechStore",
+      "rating": 4.5
+    }
+  },
+  {
+    "product_name": "Phone",
+    "price": 22000,
+    "tags": ["electronics", "budget"],
+    "variants": [
+      { "color": "black", "ram": 4 },
+      { "color": "blue", "ram": 6 }
+    ]
+  },
+  {
+    "temperature": 29.4,
+    "humidity": 61,
+    "timestamp": "2025-03-01T14:53",
+    "location": {
+      "city": "Surat",
+      "sensor_id": "S2021"
+    }
+  }
+]
