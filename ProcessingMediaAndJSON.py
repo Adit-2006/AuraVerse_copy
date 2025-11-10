@@ -52,17 +52,12 @@ def process_media(paths: List[str], out_base: str = "media_store") -> None:
             print(f"[MEDIA][ERR] {p}: {e}")
 
 def process_json(paths: List[str], db_path: str = "store.db", nosql_dir: str = "nosql_store", metadata: Dict[str, Any] = None) -> None:
-    """
-    Ensures each JSON object has a `metacomments` field if metadata is provided,
-    and writes an augmented copy of each input file as <name>.with_meta.json.
-    """
     per_file: List[Tuple[str, List[Dict[str, Any]]]] = []
     all_objs: List[Dict[str, Any]] = []
 
     for p in paths:
         objs = load_json_objects(p)
         if metadata:
-            # accept "metacomments", or fallbacks
             meta_comment = metadata.get("metacomments") or metadata.get("comment") or metadata.get("comments") if isinstance(metadata, dict) else str(metadata)
             for obj in objs:
                 if meta_comment is not None and "metacomments" not in obj:
@@ -75,7 +70,6 @@ def process_json(paths: List[str], db_path: str = "store.db", nosql_dir: str = "
         print("[JSON] No JSON objects found.")
         return
 
-    # NEW: write augmented copies next to sources
     for src, objs in per_file:
         base, ext = os.path.splitext(src)
         out_path = f"{base}.with_meta.json"
@@ -86,7 +80,6 @@ def process_json(paths: List[str], db_path: str = "store.db", nosql_dir: str = "
         except Exception as e:
             print(f"[JSON][WRITE][ERR] {src}: {e}")
 
-    # Existing clustering + storage paths
     labels, clusters_info = categorize_and_model(all_objs)
 
     for cname, details in clusters_info.items():
@@ -149,10 +142,6 @@ def collect_inputs(input_path: str) -> (List[str], List[str]):
     return media, jsons
 
 def main():
-    """
-    Usage:
-      python main_with_metacomments.py <path> [--meta '{"metacomments":"note","source":"ui"}']
-    """
     if len(sys.argv) < 2:
         print("Usage: python main_with_metacomments.py <path> [--meta '{\"metacomments\":\"x\"}']")
         sys.exit(1)
