@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
 import json, tempfile, os
 
-from main import process_media, process_json
+from ProcessingMediaAndJSON import process_media, process_json
 
 root = tk.Tk()
 root.title("Intelligent Storage System")
